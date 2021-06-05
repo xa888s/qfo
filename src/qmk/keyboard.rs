@@ -1,4 +1,4 @@
-use crate::layers::Layer;
+use super::layers::Layer;
 use hidapi::{HidApi, HidDevice, HidError};
 use thiserror::Error;
 

@@ -15,4 +15,6 @@ ron = "0.6.4"
 serde = "1.0.126"
 stderrlog = "0.5.1"
 thiserror = "1.0.25"
+
+[target.'cfg(target_family = "unix")'.dependencies]
 x11rb = { version = "0.8.1", features = ["xinput"] }

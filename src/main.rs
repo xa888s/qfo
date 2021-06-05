@@ -1,11 +1,12 @@
 mod active_window_client;
 mod config;
-mod keyboard;
-mod layers;
+mod qmk;
 
 use config::{ClassRules, ConfigError};
-use keyboard::{Keyboard, KeyboardError};
-use layers::Layer;
+use qmk::{
+    keyboard::{Keyboard, KeyboardError},
+    layers::Layer,
+};
 
 use active_window_client::ActiveWindowClient;
 use anyhow::Result;

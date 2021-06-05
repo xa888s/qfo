@@ -1,4 +1,4 @@
-use crate::layers::{Layer, MAX_LAYERS};
+use crate::qmk::layers::{Layer, MAX_LAYERS};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::{
