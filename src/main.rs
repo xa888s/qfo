@@ -2,11 +2,11 @@ mod config;
 mod keyboard;
 mod layers;
 
-use anyhow::{Context, Result};
-use config::ConfigError;
-use config::TitleMap;
+use config::{ConfigError, TitleMap};
 use keyboard::{Keyboard, KeyboardError};
 use layers::Layer;
+
+use anyhow::{Context, Result};
 use std::{borrow::Cow, convert::TryInto};
 use thiserror::Error;
 
