@@ -1,0 +1,40 @@
+(
+    // Each list denotes a layer (they are also ordered), offset by the base
+    // layer (i.e. the first list in "layers" is the 2nd layer, because the 1st
+    // layer is the base layer)
+    layers: [
+        // For each layer you can add the WM_CLASS you want
+        // Example:
+        // ["chrome", "firefox", ...]
+        // Layer 1
+        [],
+        // Layer 2
+        [],
+        // Layer 3
+        [],
+        // Layer 4
+        [],
+        // Layer 5
+        [],
+        // Layer 6
+        [],
+        // Layer 7
+        [],
+        // Layer 8
+        [],
+        // Layer 9
+        [],
+        // Layer 10
+        [],
+        // Layer 11
+        [],
+        // Layer 12
+        [],
+        // Layer 13
+        [],
+        // Layer 14
+        [],
+        // Layer 15
+        [],
+    ],
+)
