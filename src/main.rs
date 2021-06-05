@@ -2,7 +2,7 @@ mod config;
 mod keyboard;
 mod layers;
 
-use config::{ConfigError, TitleMap};
+use config::{ClassRules, ConfigError};
 use keyboard::{Keyboard, KeyboardError};
 use layers::Layer;
 
@@ -21,7 +21,7 @@ use x11rb::{
 };
 
 fn main() -> Result<()> {
-    let map: TitleMap = config::get_map()?;
+    let map: ClassRules = config::get_class_rules()?;
 
     let (conn, screen_num) =
         RustConnection::connect(None).context("failed to connect to X11 server")?;
@@ -41,6 +41,9 @@ fn main() -> Result<()> {
     conn.flush()?;
 
     let mut keyboard = Keyboard::new()?;
+
+    // this is to show that the last window we switched from was special
+    let mut last_window_was_custom: bool = false;
 
     loop {
         let event = conn.wait_for_event().context("failed to get event")?;
@@ -78,11 +81,20 @@ fn main() -> Result<()> {
                 let class =
                     std::str::from_utf8(class.class()).context("failed to parse class as utf-8")?;
 
-                if let Some(&layer) = map.get(class) {
+                if let Some(layer) = map.layer(class) {
                     keyboard.set_layer(layer)?;
+                    last_window_was_custom = true;
                 } else {
-                    // default layer
-                    keyboard.set_layer(Layer::Zero)?;
+                    // this is basically used to preserve manual layer changing at the hands of the
+                    // user. When a user focuses on a window that they have defined rules for
+                    // in the config, then we switch to that window's layer and it counts as a "custom"
+                    // switch, then if they focus on something else after that isn't "custom"
+                    // we don't blindly set their mapping to the base layer, as that would get
+                    // rid of any custom layers they have applied in the meantime.
+                    if last_window_was_custom {
+                        keyboard.set_layer(Layer::Zero)?;
+                        last_window_was_custom = false;
+                    }
                 }
             }
         }
