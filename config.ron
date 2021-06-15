@@ -1,4 +1,17 @@
 (
+    // Product ID and Vendor ID of your keyboard, you can get these from your
+    // QMK source code
+    // vendor_id: 0x0000
+    // product_id: 0x0000
+
+    // Sets the layer that is treated as the base, keep in mind that this will
+    // prevent mapping to layers that are smaller than the provided base layer
+    // (i.e. if "base_layer" is 2, then you can't set rules for layers 0, 1, and
+    // 2) because it will take the layers struct as if it had started from the
+    // provided "base_layer"; due to this if you set your base layer to be 31
+    // (highest layer possible) you will not be able to set any rules. Default: 0
+    // base_layer: 0 
+
     // Each list denotes a layer (they are also ordered), offset by the base
     // layer (i.e. the first list in "layers" is the 2nd layer, because the 1st
     // layer is the base layer)
@@ -36,5 +49,6 @@
         [],
         // Layer 15
         [],
+        // ...
     ],
 )

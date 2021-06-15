@@ -2,10 +2,6 @@ use super::layers::Layer;
 use hidapi::{HidApi, HidDevice, HidError};
 use thiserror::Error;
 
-// TODO: not hard code it to just my keyboard
-const VENDOR_ID: u16 = 0x3297;
-const PRODUCT_ID: u16 = 0x4974;
-
 pub type KeyboardResult<T> = Result<T, KeyboardError>;
 
 #[derive(Debug, Error)]
@@ -26,13 +22,13 @@ pub struct Keyboard {
 }
 
 impl Keyboard {
-    pub fn new() -> KeyboardResult<Keyboard> {
+    pub fn new(vendor_id: u16, product_id: u16) -> KeyboardResult<Keyboard> {
         let api = HidApi::new()?;
 
         // takes the 2nd HidDevice because the first one doesn't accept messages/data
         let device = api
             .device_list()
-            .filter(|d| d.vendor_id() == VENDOR_ID && d.product_id() == PRODUCT_ID)
+            .filter(|d| d.vendor_id() == vendor_id && d.product_id() == product_id)
             .nth(1)
             .ok_or(KeyboardError::NotFound)?
             .open_device(&api)?;

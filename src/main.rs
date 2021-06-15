@@ -2,7 +2,7 @@ mod active_window_client;
 mod config;
 mod qmk;
 
-use config::{ClassRules, ConfigError};
+use config::{Config, ConfigError};
 use qmk::{
     keyboard::{Keyboard, KeyboardError},
     layers::Layer,
@@ -20,11 +20,15 @@ fn main() -> Result<()> {
         .timestamp(stderrlog::Timestamp::Millisecond)
         .init()?;
 
-    let map: ClassRules = config::get_class_rules()?;
+    let Config {
+        rules: map,
+        product_id,
+        vendor_id,
+    } = config::get_config()?;
 
     let mut window_client = ActiveWindowClient::new()?;
 
-    let mut keyboard = Keyboard::new()?;
+    let mut keyboard = Keyboard::new(vendor_id, product_id)?;
 
     // this is to show that the last window we switched from was special
     let mut last_window_was_custom: bool = false;
