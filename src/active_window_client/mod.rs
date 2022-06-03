@@ -2,4 +2,4 @@
 mod unix;
 
 #[cfg(target_family = "unix")]
-pub use unix::{ActiveWindowClient, ActiveWindowError};
+pub use unix::{ActiveWindowClient, ActiveWindowError, Response};

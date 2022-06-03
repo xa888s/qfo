@@ -4,6 +4,11 @@
     // vendor_id: 0x0000
     // product_id: 0x0000
 
+    // This will automatically detect steam games and move to the provided
+    // layer. Defaults to false.
+    // detect_steam_games: true
+    // steam_games_layer: 1
+
     // Sets the layer that is treated as the base, keep in mind that this will
     // prevent mapping to layers that are smaller than the provided base layer
     // (i.e. if "base_layer" is 2, then you can't set rules for layers 0, 1, and

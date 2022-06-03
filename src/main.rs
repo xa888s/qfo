@@ -8,7 +8,7 @@ use qmk::{
     layers::Layer,
 };
 
-use active_window_client::ActiveWindowClient;
+use active_window_client::{ActiveWindowClient, Response};
 use anyhow::Result;
 use log::info;
 use thiserror::Error;
@@ -20,13 +20,16 @@ fn main() -> Result<()> {
         .timestamp(stderrlog::Timestamp::Millisecond)
         .init()?;
 
+    let config = config::get_config()?;
+
+    let mut window_client = ActiveWindowClient::with_config(&config)?;
+
     let Config {
         rules: map,
         product_id,
         vendor_id,
-    } = config::get_config()?;
-
-    let mut window_client = ActiveWindowClient::new()?;
+        detect_steam_games_layer,
+    } = config;
 
     let mut keyboard = Keyboard::new(vendor_id, product_id)?;
 
@@ -34,8 +37,13 @@ fn main() -> Result<()> {
     let mut last_window_was_custom: bool = false;
 
     loop {
-        window_client.wait_active_window(|class| {
-            if let Some(layer) = map.layer(class) {
+        window_client.wait_active_window(|res| {
+            let layer = match res {
+                Response::Class(class) => map.layer(class),
+                Response::SteamGame => detect_steam_games_layer,
+            };
+
+            if let Some(layer) = layer {
                 info!("Setting layer to {:?}", layer);
                 keyboard.set_layer(layer)?;
                 last_window_was_custom = true;
@@ -54,7 +62,7 @@ fn main() -> Result<()> {
             }
 
             Ok(())
-        })?;
+        })?
     }
 }
 

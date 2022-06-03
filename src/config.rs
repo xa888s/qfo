@@ -20,6 +20,7 @@ pub struct Config {
     pub rules: ClassRules,
     pub vendor_id: Id,
     pub product_id: Id,
+    pub detect_steam_games_layer: Option<Layer>,
 }
 
 #[derive(Debug, Clone)]
@@ -74,6 +75,8 @@ pub fn get_config() -> Result<Config, anyhow::Error> {
     fs::create_dir_all(&dirs.config_dir())?;
 
     let RawConfig {
+        raw_detect_steam_games,
+        raw_steam_games_layer,
         raw_base_layer,
         raw_layers,
         product_id,
@@ -91,10 +94,27 @@ pub fn get_config() -> Result<Config, anyhow::Error> {
     let rules = ClassRules::with_raw_layers(raw_layers, base_layer)
         .context("failed while parsing rules")?;
 
+    let detect_steam_games_layer = raw_detect_steam_games
+        .and_then(|detect_games| {
+            if detect_games {
+                Some({
+                    let raw_layer = raw_steam_games_layer.unwrap_or(1);
+
+                    raw_layer
+                        .try_into()
+                        .map_err(|_| ConfigError::InvalidSteamLayer(raw_layer))
+                })
+            } else {
+                None
+            }
+        })
+        .transpose()?;
+
     Ok(Config {
         rules,
-        product_id,
         vendor_id,
+        product_id,
+        detect_steam_games_layer,
     })
 }
 
@@ -122,8 +142,26 @@ struct RawConfig {
     product_id: u16,
     vendor_id: u16,
 
+    #[serde(
+        rename = "steam_games_layer",
+        default,
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
+    raw_steam_games_layer: Option<u8>,
+
+    #[serde(
+        rename = "detect_steam_games",
+        default,
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
+    raw_detect_steam_games: Option<bool>,
+
     // default: Layer::Zero
-    #[serde(rename = "base_layer")]
+    #[serde(
+        rename = "base_layer",
+        default,
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
     raw_base_layer: Option<u8>,
 
     // these are layers provided by the config
@@ -144,6 +182,9 @@ pub enum ConfigError {
         MAX_LAYERS - 1
     )]
     TooManyLayers(usize),
+
+    #[error("invalid layer for steam games (expected in range 1..16, got {0})")]
+    InvalidSteamLayer(u8),
 
     #[error(
         "the title {title} is duplicated in the {layer:?}-th layer at the {title_index}th title"

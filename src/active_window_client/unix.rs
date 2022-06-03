@@ -11,9 +11,17 @@ use x11rb::{
     rust_connection::{ConnectError, RustConnection},
 };
 
+use log::info;
+
+pub enum Response<'a> {
+    Class(&'a str),
+    SteamGame,
+}
+
 pub struct ActiveWindowClient {
     conn: RustConnection,
     active_window_atom: Atom,
+    steam_game_atom: Option<Atom>,
     screen_num: usize,
 }
 
@@ -33,10 +41,18 @@ pub enum ActiveWindowError {
 }
 
 impl ActiveWindowClient {
-    pub fn new() -> Result<ActiveWindowClient, ActiveWindowError> {
+    pub fn with_config(
+        config: &crate::config::Config,
+    ) -> Result<ActiveWindowClient, ActiveWindowError> {
         let (conn, screen_num) = RustConnection::connect(None)?;
 
-        let active_window = conn.intern_atom(true, b"_NET_ACTIVE_WINDOW")?.reply()?;
+        // our atoms
+        let active_window_atom = conn.intern_atom(true, b"_NET_ACTIVE_WINDOW")?.reply()?.atom;
+        let steam_game_atom = if config.detect_steam_games_layer.is_some() {
+            Some(conn.intern_atom(true, b"STEAM_GAME")?.reply()?.atom)
+        } else {
+            None
+        };
 
         let screen = &conn.setup().roots[screen_num];
 
@@ -52,7 +68,8 @@ impl ActiveWindowClient {
 
         Ok(ActiveWindowClient {
             conn,
-            active_window_atom: active_window.atom,
+            active_window_atom,
+            steam_game_atom,
             screen_num,
         })
     }
@@ -61,7 +78,7 @@ impl ActiveWindowClient {
     // window returned from the event
     pub fn wait_active_window(
         &mut self,
-        mut cb: impl FnMut(&str) -> Result<(), crate::Error>,
+        mut cb: impl FnMut(Response) -> Result<(), crate::Error>,
     ) -> Result<(), ActiveWindowError> {
         let event = self.conn.wait_for_event()?;
 
@@ -93,8 +110,19 @@ impl ActiveWindowClient {
                 };
 
                 // only call if there actually is a string
-                if let Ok(class) = std::str::from_utf8(class.class()) {
-                    cb(class)?;
+                match std::str::from_utf8(class.class()) {
+                    Ok(class) => {
+                        cb(Response::Class(class))?;
+                    }
+                    Err(_) => {
+                        if let Some(ref atom) = self.steam_game_atom {
+                            let properties = self.conn.list_properties(window)?.reply()?;
+                            if properties.atoms.contains(atom) {
+                                info!("Setting layer because current window is a steam game");
+                                cb(Response::SteamGame)?;
+                            }
+                        }
+                    }
                 }
             }
         }
